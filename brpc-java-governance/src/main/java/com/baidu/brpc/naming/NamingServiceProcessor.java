@@ -70,7 +70,7 @@ public class NamingServiceProcessor {
             });
         }
         // starter healthy check timer
-        starthealthyCheckTimer(healthyCheckIntervalMillis);
+        startHealthyCheckTimer(healthyCheckIntervalMillis);
     }
 
     public NamingServiceProcessor(List<Endpoint> endpoints,
@@ -88,11 +88,11 @@ public class NamingServiceProcessor {
         }
         if (allInstances.size() > 1) {
             // starter healthy check timer
-            starthealthyCheckTimer(healthyCheckIntervalMillis);
+            startHealthyCheckTimer(healthyCheckIntervalMillis);
         }
     }
 
-    private void starthealthyCheckTimer(int healthyCheckIntervalMillis) {
+    private void startHealthyCheckTimer(int healthyCheckIntervalMillis) {
         healthyCheckTimer = new HealthyCheckTimer(this, healthyCheckIntervalMillis);
         healthyCheckTimer.start();
     }
@@ -153,6 +153,8 @@ public class NamingServiceProcessor {
                 }
                 return communicationClient;
             }
+        } catch (Exception e){
+            log.error("delete instance {}, error msg {}", instance, e.getMessage());
         } finally {
             lock.unlock();
         }
@@ -197,9 +199,10 @@ public class NamingServiceProcessor {
         CommunicationClient instance = null;
         Iterator<CommunicationClient> iterator = list.iterator();
         while (iterator.hasNext()) {
-            if (iterator.next().getServiceInstance().equals(item)) {
-                instance = iterator.next();
-                iterator.remove();
+            CommunicationClient toCheck = iterator.next();
+            if (toCheck.getServiceInstance().equals(item)) {
+                instance = toCheck;
+                list.remove(instance);
                 break;
             }
         }
